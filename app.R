@@ -8,7 +8,9 @@ ui <- fluidPage(
               choices = c("Repos", "Stars", "Followers", "Following", "Contributions"),
               selected = "Contributions"),
   actionButton("sort", "Sort"),
-  plotOutput("plt", hover = hoverOpts(id = "plt_hover"))
+  actionButton("unslct", "Unselect"),
+  plotOutput("plt", hover = hoverOpts(id = "plt_hover", delay = 150)),
+  htmlOutput("info")
 )
 
 server <- function(input, output, session) {
@@ -35,7 +37,6 @@ server <- function(input, output, session) {
                             Contributions = rv$data$Contributions)
     if (input$sort != oldSort$n) {
       username <- rv$data$GitHubUsername[rv$selected]
-      print(username)
       rv$data <- rv$data %>% arrange(yaxis)
       rv$selected <- which(rv$data$GitHubUsername == username)
       rv$data$GitHubUsername <- factor(rv$data$GitHubUsername, 
@@ -47,11 +48,40 @@ server <- function(input, output, session) {
     }
   })
   
+  observeEvent(input$unslct, {
+    rv$selected <- NULL
+  })
+  
   output$plt <- renderPlot({
     data <- rv$data
     data[rv$selected, "Color"] <- "#ddd"
     ggplot(data, aes(x = GitHubUsername, y = yaxis, fill = Color)) + 
       geom_bar(stat="identity")
+  })
+  
+  output$info <- renderText({
+    req(rv$selected)
+    HTML(paste0(
+      '<h1 class="page-header">',
+        rv$data[rv$selected, "FirstName"], " ", rv$data[rv$selected, "LastName"], " ",
+         '<small>', rv$data[rv$selected, "Title"], '</small>',
+      '</h1>',
+      '<div class="row">',
+        '<div class="col-xs-3">',
+        '<img class="img-responsive" 
+              src="/photos/', rv$data[rv$selected, "Photo"], '.jpg" 
+              alt="" height="200" width="200" style="inline">',
+        '</div>',
+        '<div class="col-xs-9">',
+          '<div><strong>Github Info:</strong></div>',
+            '<div>Number of Repos: ', rv$data[rv$selected, "Repos"],'</div>',
+            '<div>Number of Stars: ', rv$data[rv$selected, "Stars"],'</div>',
+            '<div>Number of Followers: ', rv$data[rv$selected, "Followers"],'</div>',
+            '<div>Number of Followees: ', rv$data[rv$selected, "Following"],'</div>',
+            '<div>Number of Contributions: ', rv$data[rv$selected, "Contributions"],'</div>',
+          '</div>',
+        '</div>'
+    ))
   })
 }
 
