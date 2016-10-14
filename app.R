@@ -21,29 +21,25 @@ server <- function(input, output, session) {
   )
   
   observe({
-    data <- data %>% filter(Title %in% input$flt)
-    data$yaxis <- 
+    rv$data <- rv$data %>% filter(Title %in% input$flt)
+    rv$data$yaxis <- 
       switch(input$yaxis,
-             Repos = data$Repos,
-             Stars = data$Stars,
-             Followers = data$Followers,
-             Following = data$Following,
-             Contributions = data$Contributions)
-    rv$data <- data
-  })
-  
-  observe({
-    data <- rv$data
+             Repos = rv$data$Repos,
+             Stars = rv$data$Stars,
+             Followers = rv$data$Followers,
+             Following = rv$data$Following,
+             Contributions = rv$data$Contributions)
     if (input$sort != oldSort$n) {
-      data <- data %>% arrange(yaxis)
-      data$GitHubUsername <- factor(data$GitHubUsername, levels <- data$GitHubUsername)
+      rv$data <- rv$data %>% arrange(yaxis)
+      rv$data$GitHubUsername <- factor(rv$data$GitHubUsername, 
+                                       levels = rv$data$GitHubUsername)
       oldSort$n <- input$sort
     }
-      if (!is.null(input$plt_hover$x)) {
-        selected <- round(input$plt_hover$x)
-        data[selected, "Color"] <- "#ddd"
-      }
-      rv$data <- data
+    if (!is.null(input$plt_hover$x)) {
+      #rv$data$Color <- "#9d2"
+      selected <- round(input$plt_hover$x)
+      rv$data[selected, "Color"] <- "#ddd"
+    }
   })
   
   output$plt <- renderPlot({
