@@ -21,8 +21,12 @@ server <- function(input, output, session) {
     selected = NULL
   )
   
-  observe({
+  observeEvent(input$flt, {
     rv$data <- rv$data %>% filter(Title %in% input$flt)
+    rv$selected <- NULL
+  })
+  
+  observe({
     rv$data$yaxis <- switch(input$yaxis,
                             Repos = rv$data$Repos,
                             Stars = rv$data$Stars,
@@ -37,14 +41,9 @@ server <- function(input, output, session) {
       rv$data$GitHubUsername <- factor(rv$data$GitHubUsername, 
                                        levels = rv$data$GitHubUsername)
       oldSort$n <- input$sort
-      # rv$selected <- NULL
     }
     if (!is.null(input$plt_hover$x)) {
-      #rv$data$Color <- rep("#9d2", nrow(rv$data))
       rv$selected <- round(input$plt_hover$x)
-      #rv$data[selected, "Color"] <- "#ddd"
-    # } else {
-      #rv$selected <- NULL
     }
   })
   
