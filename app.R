@@ -13,10 +13,15 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
+  oldSort <- new.env()
+  oldSort$n <- 0
   
-  oldSort <- isolate(input$sort)
+  rv <- reactiveValues(
+    data = data
+  )
   
-  selectedData <- reactive({
+  #selectedData <- reactive({
+  observe({
     data <- data %>% filter(Title %in% input$flt)
     data$yaxis <- 
       switch(input$yaxis,
@@ -26,41 +31,40 @@ server <- function(input, output, session) {
              Following = data$Following,
              Contributions = data$Contributions)
     #data <- data %>% arrange(yaxis)
-    data$GitHubUsername <- factor(data$GitHubUsername, levels <- data$GitHubUsername)
+    #data$GitHubUsername <- factor(data$GitHubUsername, levels <- data$GitHubUsername)
     # if (!is.null(input$plt_hover$x)) {
     #   selected <- round(input$plt_hover$x)
     #   data[selected, "Color"] <- "#ddd"
     # }
-    data
+    #data$GitHubUsername <- factor(data$GitHubUsername, levels <- data$GitHubUsername)
+    
+    # data
+    rv$data <- data
   })
   
   sortedData <- reactive({
-    data <- selectedData()
-    invalidateLater(100, session)
-    
-    if (isolate(input$sort) != oldSort) {
-      oldSort <<- isolate(input$sort)
+    # input$sort
+    #data <- (selectedData())
+    data <- rv$data
+    if (input$sort != oldSort$n) {
       data <- data %>% arrange(yaxis)
       data$GitHubUsername <- factor(data$GitHubUsername, levels <- data$GitHubUsername)
+      oldSort$n <- input$sort
       if (!is.null(input$plt_hover$x)) {
         selected <- round(input$plt_hover$x)
         data[selected, "Color"] <- "#ddd"
       }
+      rv$data <- data
+      return(data)
     } else {
       if (!is.null(input$plt_hover$x)) {
         selected <- round(input$plt_hover$x)
         data[selected, "Color"] <- "#ddd"
       }
+      return(data)
     }
-    # data <- isolate(selectedData())
-    # data <- data %>% arrange(yaxis)
-    # data$GitHubUsername <- factor(data$GitHubUsername, levels <- data$GitHubUsername)
-    # if (!is.null(input$plt_hover$x)) {
-    #   selected <- round(input$plt_hover$x)
-    #   data[selected, "Color"] <- "#ddd"
-    # }
-    data
   })
+  
   
   # hover <- {
   #   data$GitHubUsername <- factor(data$GitHubUsername, levels <- data$GitHubUsername)
