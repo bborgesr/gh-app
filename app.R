@@ -1,3 +1,5 @@
+source('helpers.R', local=TRUE)
+
 ui <- fluidPage(
   selectInput("flt", "Filter by title:", 
               choices = unique(rstudio$Title), 
